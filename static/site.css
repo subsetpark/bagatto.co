@@ -27,6 +27,29 @@ a {
   background-color: transparent;
   -webkit-text-decoration-skip: objects; }
 
+a:link {
+  color: #005193;
+}
+
+a:active {
+  color: #111;
+}
+
+a:visited {
+  color: #a93616;
+}
+
+.title {
+  color: #005193 !important;
+}
+.nav {
+    decoration: none;
+    color: #111 !important;
+}
+
+.footer {
+  background-color: #e6e6ee; }
+
 a:active, a:hover {
   outline-width: 0; }
 
@@ -608,12 +631,6 @@ textarea {
 .lh-copy {
   line-height: 1.6; }
 
-.link {
-  text-decoration: none; }
-
-.link, .link:active, .link:focus, .link:hover, .link:link, .link:visited {
-  transition: color 0.15s ease-in; }
-
 .list {
   list-style-type: none; }
 
@@ -964,6 +981,9 @@ textarea {
 
 .bg-white {
   background-color: #fff; }
+
+.bg-pale-yellow {
+  background-color: #fffdd8; }
 
 .focus-black:focus {
   color: #000; }
