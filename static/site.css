@@ -43,6 +43,7 @@ dfn {
   font-style: italic; }
 
 h1 {
+  font-family: "Adamina";
   font-size: 2em;
   margin: .67em 0; }
 
@@ -3518,7 +3519,7 @@ textarea {
     vertical-align: bottom; } }
 
 body {
-  font-family: "Fira Sans", sans-serif; }
+  font-family: "Raleway", sans-serif; }
 
 div.md a {
   font-weight: 600;
