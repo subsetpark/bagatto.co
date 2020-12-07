@@ -107,7 +107,7 @@ inside the module.</p>
 <p>They are:</p>
 
 <ul>
-<li>The <a href="#bagatto-api"><code>bagatto</code></a> library itself, a collection of useful functions
+<li>The <a href="./api.html#bagatto-api"><code>bagatto</code></a> library itself, a collection of useful functions
 designed to reduce boilerplate in Bagatto modules, whose API is
 listed below;</li>
 <li>The <a href="https://github.com/janet-lang/path"><code>path</code></a> library, which
@@ -117,8 +117,14 @@ library, which exposes a useful DSL for shelling out to the command
 line.</li>
 </ul>
 
+<p>One of Bagatto&#8217;s principles is to expose as much of its API as
+possible in the form of ordinary functions to be used to produce the
+data structures you define in your index module. There are a couple
+places where that isn&#8217;t possible, and where we have to expose a
+&#8220;global&#8221; API instead.</p>
+
 <p>In addition to the helper functions exposed in the <code>bagatto/</code>
-namespace, there is one more feature that can be accessed directly
+namespace, there are a few features that can be accessed directly
 inside of index modules:</p>
 
 <h3 id="defaultshandling">Defaults Handling</h3>
@@ -126,8 +132,19 @@ inside of index modules:</p>
 <p>Bagatto exposes the <code>bagattto/set-defaults!</code> function, which can be
 called at any point inside an index module. It takes a single
 argument: a struct or dictionary specifying the default value for any
-of the specification attributes: <code>:src</code>, <code>:attrs</code>, <code>:path</code>,
-<code>:contents</code>.</p>
+of the specification attributes: <code>:src</code>, <code>:attrs</code>, <code>:dest</code>,
+<code>:out</code>.</p>
+
+<h3 id="outputdirectory">Output Directory</h3>
+
+<p>By calling <code>bagatto/set-output-dir!</code>, you can specify the directory
+that Bagatto should write its generated file tree into. This is
+principally exactly the same as appending that directory name to every
+path that you generate; however, if you use this feature then you can
+re-use paths in your business logic (for instance, you can define a
+path value and use it when generating a file, and when rendering a
+link in your site), as the additional file hierarchy will be
+transparently dealt with.</p>
 
 <h2 id="data">Data</h2>
 
@@ -184,12 +201,12 @@ the content of the site data associated with <code>:config-json</code>.</p>
 <pre><code class="clj">repl:17:&gt; (bagatto/eval-data data)
 @{:config-json @{&quot;subtitle&quot; &quot;A Very Good Blog.&quot; 
                  :path &quot;config.json&quot; 
-                 :src @&quot;{\&quot;subtitle\&quot;:\&quot;A Very Good Blog.\&quot;}\n&quot;}}
+                 :contents @&quot;{\&quot;subtitle\&quot;:\&quot;A Very Good Blog.\&quot;}\n&quot;}}
 </code></pre>
 
 <p>We see that the resulting site data has a single entry,
 <code>:config-json</code>. The table associated with this entry has the two
-attributes we get for free&#8212;<code>:path</code> and <code>:src</code>, which are the file
+attributes we get for free&#8212;<code>:path</code> and <code>:contents</code>, which are the file
 path and contents, respectively&#8212;but that the call to <code>parse-json</code>
 has resulted in the key/value pairs inside the JSON file have been
 parsed and put in the site data too.</p>
@@ -233,7 +250,7 @@ includes the contents of the matching files. We can use this to
 process files in more interesting ways.</p>
 
 <pre><code class="clj">repl:28:&gt; (bagatto/eval-loader (bagatto/slurp-* &quot;demo/posts/*.md&quot;))
-@[(&quot;demo/posts/post.md&quot; @&quot;## A Post That You Might Be Interested In.\n\nI'm writing this in *Markdown*. Therefore, in my page template, I'll\ncall `bagatto/markdown-&gt;html` in order to render this markdown into\nHTML.\n&quot;) (&quot;demo/posts/post2.md&quot; @&quot;title: A Really Good Title\nstatus: post\n---\n\n## The Other Post on My Blog.\n\nThis post is very similar to the other post. \n\nHowever, it contains footnotes[^1].\n\n[^1]: Bagatto has built-in support for Markdown via the\n    [moondown](https://github.com/joy-framework/moondown)\n    library. However, moondown doesn't have support for footnotes, so\n    we should use multimarkdown to render this instead. Bagatto has\n    the `mmarkdown-&gt;html` (notice the extra `m`!) function which\n    shells out to the multimarkdown application. So if you install\n    that, you can take advantage of more features.\n\n    Of course, if you want to use some other markup or text processing\n    application, you can write your own function, either in your index\n    or a helper module, and use that instead.\n&quot;)]
+@[(&quot;demo/posts/post.md&quot; @&quot;## A Post That You Might Be Interested In...&quot;) ...]
 </code></pre>
 
 <p>The return value of the loader for each matching file is a two-tuple
@@ -251,10 +268,10 @@ additional metadata.</p>
 </code></pre>
 
 <pre><code class="clj">repl:33:&gt; (bagatto/eval-data data)
-@{:posts @[@{:path &quot;demo/posts/post.md&quot; :src @&quot;...&quot;} 
+@{:posts @[@{:path &quot;demo/posts/post.md&quot; :contents @&quot;...&quot;} 
            @{&quot;status&quot; &quot;post&quot; 
              :path &quot;demo/posts/post2.md&quot; 
-             :src @&quot;...&quot; 
+             :contents @&quot;...&quot; 
              &quot;title&quot; &quot;A Really Good Title&quot;}]}
 </code></pre>
 
@@ -282,7 +299,7 @@ parsed.</p>
                    :transform (bagatto/attr-sorter &quot;topic&quot;)}})
 </code></pre>
 
-<p><a href="#bagattoattr-sorter"><code>bagatto/attr-sorter</code></a> is exposed as a part of
+<p><a href="./api.html#bagattoattr-sorter"><code>bagatto/attr-sorter</code></a> is exposed as a part of
 the Bagatto library and allows us to specify a key present in all the
 items, and sort the collection by it.</p>
 
@@ -328,8 +345,8 @@ contents for one or more files to be created. Therefore, perhaps the
 simplest possible site is one consisting of a static path and
 contents:</p>
 
-<pre><code class="clj">repl:2:&gt; (def site {:_ {:path &quot;out.txt&quot; :contents &quot;Welcome to my website&quot;}})
-{:_ {:path &quot;out.txt&quot; :contents &quot;Welcome to my website&quot;}}
+<pre><code class="clj">repl:2:&gt; (def site {:_ {:dest &quot;out.txt&quot; :out &quot;Welcome to my website&quot;}})
+{:_ {:dest &quot;out.txt&quot; :out &quot;Welcome to my website&quot;}}
 </code></pre>
 
 <p>We can use <code>bagatto/eval-site</code> to get an output of the path and
@@ -359,12 +376,12 @@ data and outputs some file contents. We can write our own extremely
 simple one, which looks for a secret in the site data and outputs it
 in JDN format to a file. Then we can define a simple site
 specification with a static path that passes that function in directly
-as the <code>:contents</code> attribute.</p>
+as the <code>:out</code> attribute.</p>
 
 <pre><code class="clj">repl:6:&gt; (defn renderer [data] (string/format &quot;%j&quot; (data :secret)))
 &lt;function renderer&gt;
-repl:7:&gt; (def site {:_ {:path &quot;out.txt&quot; :contents renderer}})
-{:_ {:path &quot;out.txt&quot; :contents &lt;function renderer&gt;}}
+repl:7:&gt; (def site {:_ {:dest &quot;out.txt&quot; :out renderer}})
+{:_ {:dest &quot;out.txt&quot; :out &lt;function renderer&gt;}}
 </code></pre>
 
 <p>Now, of course, we need to ensure that <code>:secret</code> is present in the
@@ -389,8 +406,8 @@ data from more than one source.</p>
                                               (get-in data [:personal :password]) 
                                               (math/random)))
 &lt;function renderer&gt;
-repl:14:&gt; (def site {:_ {:path &quot;out.txt&quot; :contents renderer}})
-{:_ {:path &quot;out.txt&quot; :contents &lt;function renderer&gt;}}
+repl:14:&gt; (def site {:_ {:dest &quot;out.txt&quot; :out renderer}})
+{:_ {:dest &quot;out.txt&quot; :out &lt;function renderer&gt;}}
 repl:15:&gt; (bagatto/eval-site site {:personal {:password &quot;p@ssw0rd&quot;} 
                                    :config {:prefix &quot;md5&quot;}})
 @[(:write &quot;out.txt&quot; &quot;md5:\&quot;p@ssw0rd\&quot;:0.487181&quot;)]
@@ -419,7 +436,7 @@ rendering a <code>post.html</code> for each source file).</p>
 
 <p>Given some site data with a series of named data entries, we can use
 the <code>each</code> attribute to refer to one of those entries. Bagatto will
-then call the <code>path</code> and <code>contents</code> functions on each file in the
+then call the <code>dest</code> and <code>out</code> functions on each file in the
 entry.</p>
 
 <p>Because there&#8217;s now an additional piece of data in addition to the
@@ -458,17 +475,17 @@ element.</p>
 to the <code>users</code> site data.</p>
 
 <pre><code class="clj">repl:35:&gt; (def site {:_ {:each :users 
-                         :path (bagatto/path-copier &quot;passwords/&quot;) 
-                         :contents renderer}})
-{:_ {:path &lt;function 0x55F89DCBC880&gt; :contents &lt;function renderer&gt; :each :users}}
+                         :dest (bagatto/path-copier &quot;passwords/&quot;) 
+                         :out renderer}})
+{:_ {:dest &lt;function 0x55F89DCBC880&gt; :out &lt;function renderer&gt; :each :users}}
 </code></pre>
 
 <p><code>:each :users</code> will cause Bagatto to call the renderer once for each
 item in <code>:users</code>. In addition, we now need to specify an actual
-function for <code>:path</code>. If we left it as a static value, the contents
+function for <code>:dest</code>. If we left it as a static value, the contents
 would be repeatedly written to the same file, which is obviously not
 what we want. Here we use the
-<a href="#bagattopath-copier"><code>bagatto/path-copier</code></a> helper, which gives us a
+<a href="./api.html#bagattopath-copier"><code>bagatto/path-copier</code></a> helper, which gives us a
 function that will accept any file and return a new path with the base
 we specify.</p>
 
@@ -486,10 +503,10 @@ are interpolated from the contents of their respective source files.</p>
 
 <p>A very common operation when generating a website is to copy a source
 file without touching it. If Bagatto receives a site specification
-with a site selector and a <code>:path</code> entry, but no <code>:contents</code> entry, it
+with a site selector and a <code>:dest</code> entry, but no <code>:out</code> entry, it
 will interpret that as a <strong>copy</strong> operation. It will read the <code>:path</code>
 of whatever item or item it receives (this attribute is always
-present), and copy it to the <code>:path</code> attribute of the site
+present), and copy it to the <code>:dest</code> attribute of the site
 specification.</p>
 
 <p>Here&#8217;s a super simple data spec:</p>
@@ -505,8 +522,8 @@ parser, which just returns the base <code>:path</code> attribute.</p>
 <p>We can now define a <code>site</code> that simply refers to <code>:users</code> and
 specifies a path without specifying contents.</p>
 
-<pre><code class="clj">repl:58:&gt; (def site {:_ {:each :users :path (bagatto/path-copier &quot;passwords/&quot;)}})
-{:_ {:path &lt;function 0x55F89DCD8B30&gt; :each :users}}
+<pre><code class="clj">repl:58:&gt; (def site {:_ {:each :users :dest (bagatto/path-copier &quot;passwords/&quot;)}})
+{:_ {:dest &lt;function 0x55F89DCD8B30&gt; :each :users}}
 </code></pre>
 
 <p>Evaluating the site produces two copy instructions to the new paths:</p>
@@ -535,7 +552,7 @@ enjoyable to use.</p>
       &lt;p class=&quot;post-info&quot;&gt;
         {{ (get-in args [:_item :date]) }}
       &lt;/p&gt;
-      {- (bagatto/mmarkdown-&gt;html (get-in args [:_item :src])) -}
+      {- (bagatto/mmarkdown-&gt;html (get-in args [:_item :contents])) -}
 
 {$ (import ./base_bottom :as base_bottom) $}
 {% (base_bottom/render-dict args) %}
@@ -597,7 +614,7 @@ the post.</dd>
 <h3 id="renderingatemplate">Rendering a Template</h3>
 
 <p>The basic call to render a template is
-<a href="#bagattorender"><code>bagatto/render</code></a>. This allows us to directly invoke
+<a href="./api.html#bagattorender"><code>bagatto/render</code></a>. This allows us to directly invoke
 a template by name, with site data and an optional item, and returns
 the fully rendered template. For instance, if we have a simple
 template at <code>templates/simple.temple</code>:</p>
@@ -617,23 +634,163 @@ with placeholders for the values to be interpolated.</p>
 <h3 id="renderergenerators">Renderer Generators</h3>
 
 <p>Because <code>bagatto/render</code> is such a common operation, Bagatto offers a
-<a href="#bagattorenderer">convenience function</a> that will generate a
+<a href="./api.html#bagattorenderer">convenience function</a> that will generate a
 <strong>renderer</strong> that will make the above call. For instance, if I wanted
 to specify the above template in a site specification, I&#8217;d probably
 write this:</p>
 
-<pre><code class="clj">repl:6:&gt; (def site {:_ {:path &quot;out.txt&quot; 
-                        :contents (bagatto/renderer &quot;templates/simple&quot;)}})
-{:_ {:path &quot;out.txt&quot; :contents &lt;function 0x55DAC976C660&gt;}}
+<pre><code class="clj">repl:6:&gt; (def site {:_ {:dest &quot;out.txt&quot; 
+                        :out (bagatto/renderer &quot;templates/simple&quot;)}})
+{:_ {:dest &quot;out.txt&quot; :out &lt;function 0x55DAC976C660&gt;}}
 </code></pre>
 
 <p>Thus I avoid having to write a new renderer function for each
-<code>:contents</code> entry, if I&#8217;m just going to pass on the data to a specific
+<code>:out</code> entry, if I&#8217;m just going to pass on the data to a specific
 template. Evaluating the site we get the same thing:</p>
 
 <pre><code class="clj">repl:7:&gt; (bagatto/eval-site site {&quot;topic&quot; &quot;Web Design&quot;})
 @[(:write &quot;out.txt&quot; @&quot;I am known for my Web Design skills.\n&quot;)]
 </code></pre>
+
+<h2 id="filters">Filters</h2>
+
+<p>A site spec with an <code>:each</code> can include a <code>:filter</code> attribute,
+too. This can be any predicate function which takes the site and an
+individual item from the spec&#8217;s site selector, and returns true or
+false. If the return value is false, the site spec will skip that elements.</p>
+
+<p>This can be very useful when handling an input of mixed files. For
+instance, with a <code>static/</code> directory that contains both CSS and
+supplementary HTML files, we might want to have different render steps
+for each. We could then write two site specs, that both take that data
+entry in their <code>:each</code>, but have different <code>:filter</code> attributes (we
+could also have written two different wildcards in two different data
+specs, but hopefully you get my point).</p>
+
+<h1 id="extendingbagatto">Extending Bagatto</h1>
+
+<p>Bagatto bills itself as a &#8220;transparent&#8221; static site generator. By this
+we mean: we should favor <em>first-class functions</em> over <em>configuration</em>,
+and <em>native terms and data structures</em> over <em>indirect control flow</em>
+whenever possible.</p>
+
+<p>Here&#8217;s a simple example: Bagatto creates files by combining a <em>file
+path</em> with some <em>file contents</em>. The values that can go in the <code>:out</code>
+section of a site specification can either be strings, or functions
+which produce strings.</p>
+
+<p>We might be tempted as application authors to introduce a layer of
+abstraction in front of the render process and ask the user to specify
+the <em>name</em> of a render function built into Bagatto. This would provide
+a simple, convenient DSL. Unfortunately, it has the very unfortunate
+side effect of effectively walling off that function from a site
+author. If&#8212;when&#8212;the author needs to understand what specifically
+is being passed into the render function, or needs to tweak its output
+slightly, they&#8217;re out of luck. The logic that reads this name,
+translates it into a render function, calls the function with some
+inputs and uses the output is all stuck within the belly of Bagatto
+and the author might need to recompile the whole application to get
+into it.</p>
+
+<p>Similarly, if they want to introduce a new renderer&#8212;a new template
+language for instance&#8212;they can only do so by introducing the
+function directly into Bagatto, giving it a name, and then passing the
+name in a site specification.</p>
+
+<p>Therefore we keep the operation of the renderer within inspection of
+the author. By specifying a literal function, we can easily wrap other
+functions and debug their output or change it. Similarly, we do
+attempt to offer an author the same level of convenience as the above
+DSL; but instead of offering them the ability to name a function that
+we control, we offer them the ability to call a function that outputs
+the renderer function itself, so that they still have access to its
+inputs and outputs.</p>
+
+<p>Thus, we have a pretty straightforward way to write our own loaders,
+attributes, path-generator and renderer functions.</p>
+
+<p>Each of the below entries will have a typespec describing the
+signature of the functions that can be implemented. This isn&#8217;t
+meaningful Janet, but hopefully gives a succinct picture of the types
+that will be meaningful.</p>
+
+<h2 id="loaders">Loaders</h2>
+
+<pre><code>(let [element (or 'source-path '(source-path file-contents))]
+ (defn loader [] 
+  (or '{:each (element ...)} '{:some element)}))
+</code></pre>
+
+<p>The <code>:src</code> attribute in a data spec can take a 0-arity function which,
+when called, returns one of two types of values:</p>
+
+<h3 id=":eachvalues"><code>{:each values}</code></h3>
+
+<p><code>values</code> is any indexable data structure, the elements of which are
+either two-tuples or single values. Two-tuples will be treated by the
+base attribute parser as <code>[source-path file-contents]</code>. Single values
+will be treated as <code>source-path</code> only.</p>
+
+<h3 id=":somevalue"><code>{:some value}</code></h3>
+
+<p><code>value</code> is a single instance of the above value type: either a
+two-tuple or a single path value.</p>
+
+<p>We could, for instance, write a custom loader function that accepted a
+URL, made a web request, and returned a (file-url file-contents)
+tuple.</p>
+
+<h2 id="parsers">Parsers</h2>
+
+<pre><code>(defn parser [contents attrs] attrs)
+</code></pre>
+
+<p><code>:attrs</code> can take any parser function. The purpose of a parser is to
+transform the individual outputs of a data loader into an attributes
+table. There are two attributes that are guaranteed to be present when
+the parser is called, <code>:path</code> and <code>:contents</code>. A parser function
+shouldn&#8217;t remove either of these attributes, but can use them to
+generate new ones. For instance, if <code>contents</code> is unparsed Markdown
+with YAML frontmatter, then a parser function could extract metadata
+from the frontmatter and return an updated attributes table with those
+arbitrary metadata.</p>
+
+<p><code>contents</code> and the <code>:contents</code> attribute can be expected to be
+identical, and the former is provided as a convenience.</p>
+
+<p>An example of a custom parser would be one that shelled out to
+<a href="https://asciidoctor.org/">Asciidoctor</a> to extract attributes from an
+asciidoc document.</p>
+
+<h2 id="pathgenerators">Path Generators</h2>
+
+<pre><code>(defn each-parser [data item] path)
+(defn some-parser [data] path)
+</code></pre>
+
+<p>In the site specification, <code>:dest</code> can take any function which returns
+a file path string. If the spec has an <code>:each</code>, the generator function
+should take the site data and the individual item as arguments, and
+return the destination path for the individual item.</p>
+
+<p>Otherwise, it should take the site data as a single argument and
+return the destination path for its entry output.</p>
+
+<h2 id="renderers">Renderers</h2>
+
+<pre><code>(defn each-renderer [data item] file-contents)
+(defn some-renderer [data] file-contents)
+</code></pre>
+
+<p><code>:out</code> takes any renderer function&#8212;these work along exactly the
+same lines as path generators. If the site spec has an <code>:each</code>, the
+function should take two arguments, otherwise it should take one. The
+return value of the function will be written directly to the file path
+in its site spec.</p>
+
+<p>Following from the parser example above, an example custom renderer
+could take an asciidoc document and shell out to Asciidoctor to render
+it into HTML.</p>
 </div>
 
 
