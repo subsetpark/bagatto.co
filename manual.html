@@ -600,16 +600,14 @@ environment with the same libraries that are listed at the beginning
 of this manual. Thus we can call <code>bagatto/</code> helper functions from
 within a template.</p>
 
-<dl>
-<dt>The only other change it makes is to ensure the presence, if</dt>
-<dt>applicable of the <code>item</code> passed in as the second argument to site spec</dt>
-<dt>functions, which contains the attributes of the individual element of</dt>
-<dt>an <code>:each</code> selection. Those attributes are made available at `(args</dt>
-<dd>_item)<code>. For instance, in the example above, we expect the attributes
-of the specific blog post being rendered to be present in the</code>:_item`
+<p>The only other change it makes is to ensure the presence, if
+applicable of the <code>item</code> passed in as the second argument to site spec
+functions, which contains the attributes of the individual element of
+an <code>:each</code> selection. Those attributes are made available at <code>(args :_item)</code>.
+For instance, in the example above, we expect the attributes
+of the specific blog post being rendered to be present in the <code>:_item</code>
 value, and so we refer to it to get the title, date and contents of
-the post.</dd>
-</dl>
+the post.</p>
 
 <h3 id="renderingatemplate">Rendering a Template</h3>
 
