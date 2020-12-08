@@ -63,27 +63,71 @@
                 </li>
               </ul>
             </nav>
-           </div>
-        <div class="f7 pr6 pt4">
-        (Bagatto Logo) 
-        </div>
-        
-
 
 
         <div class="ph3 mt5">
                              <div class="pv5">
+                       <h4 class="mb4 ttu tracked">An SSG written in Janet</h4>
+                       <div class="mw6 lh-copy">
+                         <p>Bagatto is a static site generator written in
+<a href="https://janet-lang.org/">Janet</a>, a delightful and effective Lisp. Not
+only is it written <em>in</em> Janet, but site authors construct sites by
+writing ordinary Janet modules, with the full power of the language
+and ecosystem behind them:</p>
+
+<pre><code class="clj">(def data {:config {:attrs {:title &quot;A Demo Bagatto Config&quot;}}
+           :posts {:src (bagatto/slurp-* &quot;posts/*.md&quot;)
+                   :attrs parse-post}
+           :static {:src (bagatto/* &quot;static/*&quot;)
+                    :attrs bagatto/parse-base}
+           :config-json {:src &quot;config.json&quot;
+                         :attrs bagatto/parse-json}
+           :config-file {:src &quot;config.jdn&quot;}})
+</code></pre>
+
+<pre><code class="clj">(def site {:post-index {:dest index-path
+                        :out render-post-index}
+           :posts {:each :posts
+                   :dest make-post-path
+                   :out render-post}
+           :static {:each :static
+                    :dest make-static-path}})
+
+</code></pre>
+                       </div>
+                     </div>
+                     
+                     <div class="pv5">
                        <h4 class="mb4 ttu tracked">Transparent</h4>
                        <div class="mw6 lh-copy">
-                         <p>It&#8217;s transparent.</p>
+                         <p>Bagatto exposes the native terms of the Janet programming language to
+site authors and relies on ordinary functions to generate output
+values. This approach, rather than asking authors to define their
+sites using a configuration language, means that the machinery that
+produces your website is always available and inspectable. There is no
+hidden functionality.</p>
+                       </div>
+                     </div>
+                     
+                     <div class="pv5">
+                       <h4 class="mb4 ttu tracked">No Magic</h4>
+                       <div class="mw6 lh-copy">
+                         <p>Bagatto will never do something in an indirect, non-obvious way in the
+name of convenience. Things like normally-namespaced functions,
+accepting a filename on the command line, and compatibility with jpm
+are examples of how a straightforward, non-magic interface can be
+elegant and enjoyable.</p>
                        </div>
                      </div>
                      
 
         </div>
 
-      </div>
+        </div>
+    <div><img src="images/logo.svg"></div>
+
     </div>
+    
     <footer class="footer pv5 ph3 pa6-ns mt5 dt-l w-100 lh-copy">
       <div class="">
         Z. D. Smith, Brooklyn, 2020
