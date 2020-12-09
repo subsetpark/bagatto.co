@@ -104,6 +104,9 @@ svg:not(:root) {
   overflow: hidden; }
 
 code, kbd, pre, samp {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: justify;
   font-family: monospace;
   font-size: 1em; }
 
