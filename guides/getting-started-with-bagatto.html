@@ -1,0 +1,369 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8" />
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible" />
+    <title>
+      Bagatto
+    </title>
+    <meta
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <meta
+      content=""
+      itemprop="author"
+      name="author"
+    />
+    <link href="/images/48.png" rel="icon" sizes="48x48" type="image/png" />
+    <link href="/images/128.png" rel="icon" sizes="128x128" type="image/png" />
+    <link href="/images/256.png" rel="icon" sizes="256x256" type="image/png" />
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Adamina&family=Raleway:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"> 
+    <link href="../static/site.css" rel="stylesheet" type="text/css" />
+  </head>
+
+  <body>
+    <div>
+      <div>
+        <div class="mw8 center pv7 cf">
+          <div class="fl">
+            <div class="ph3">
+              <h1 class="f1 ma0 title">
+                Bagatto
+              </h1>
+              <p class="mv3">
+                A transparent, extensible static site generator
+              </p>
+            </div>
+            <nav role="navigation">
+              <ul class="list pl0 ma0">
+                                <li class="dib mr2">
+                  <a class="pv2 ph3 fw6 nav focus-black"
+                     href="../index.html">Bagatto</a>
+                </li>
+                <li class="dib mr2">
+                  <a class="pv2 ph3 fw6 nav focus-black"
+                     href="../manual.html">Manual</a>
+                </li>
+                <li class="dib mr2">
+                  <a class="pv2 ph3 fw6 nav focus-black"
+                     href="../guides.html">Guides</a>
+                </li>
+                <li class="dib mr2">
+                  <a class="pv2 ph3 fw6 nav focus-black"
+                     href="../api.html">API</a>
+                </li>
+
+                <li class="dib mr2">
+                  <a class="pv2 ph3 fw6 nav focus-black"
+                     href="https://sr.ht/~subsetpark/bagatto/">Source</a>
+                </li>
+              </ul>
+            </nav>
+
+
+
+      <div class="ph3 mt5">
+        <div>
+          <h1 class="dib ma0 pr2">Getting Started With Bagatto</h1>
+        </div>
+        <div class="md guide">
+        <p>Building a website with Bagatto consists of three steps:</p>
+
+<ol>
+<li>Installing the Bagatto executable;</li>
+<li>Writing a Bagatto site;</li>
+<li>Building your site.</li>
+</ol>
+
+<p>Let&#8217;s cover those in order.</p>
+
+<h1 id="installingbagatto">Installing Bagatto</h1>
+
+<p>Bagatto is built using the <a href="https://janet-lang.org">Janet</a> language and needs Janet to
+be compiled. You will use the Janet package manager, <code>jpm</code>, to install
+it.</p>
+
+<h2 id="gettingjanet">Getting Janet</h2>
+
+<p>Install the Janet language. You can download the release here: <a href="https://github.com/janet-lang/janet/releases">https://github.com/janet-lang/janet/releases</a></p>
+
+<p>It&#8217;s available on Homebrew: <a href="https://formulae.brew.sh/formula/janet">https://formulae.brew.sh/formula/janet</a></p>
+
+<p>And on AUR: <a href="https://aur.archlinux.org/packages/janet-lang/">https://aur.archlinux.org/packages/janet-lang/</a></p>
+
+<p>You can read the <a href="https://janet-lang.org/docs/index.html">Janet docs</a>for more information.</p>
+
+<p>Once you install Janet, you&#8217;ll have access to the <code>jpm</code> command.</p>
+
+<h2 id="installingbagatto">Installing Bagatto</h2>
+
+<p>The Bagatto source is available at <a href="https://git.sr.ht/~subsetpark/bagatto">https://git.sr.ht/~subsetpark/bagatto</a>.</p>
+
+<p>You can use <code>jpm</code> to install it.</p>
+
+<h3 id="installingwithsudo">Installing with <code>sudo</code></h3>
+
+<p>Run the following command:</p>
+
+<p><code>sudo jpm install https://git.sr.ht/~subsetpark/bagatto</code></p>
+
+<p>This will download and the Bagatto library with all its dependencies,
+then compile the <code>bag</code> application and install it. (on my machine, it
+installs it to <code>/sbin/bag</code>).</p>
+
+<h3 id="installingwithoutsudo">Installing without <code>sudo</code></h3>
+
+<p>Clone Bagatto to a working directory and then build it. By default,
+<code>jpm</code> will install things globally, but you can easily specify a local
+directory. Here&#8217;s an example:</p>
+
+<pre><code class="bash">code-src/bagatto [master !] ⊕ JANET_PATH=janet_modules jpm load-lockfile
+&lt;all the deps get downloaded and compiled...&gt;
+code-src/bagatto [master !] ⊕ JANET_PATH=janet_modules/ jpm build       
+generating executable c source...
+found native janet_modules/_jmod_posix_spawn.so...
+found native janet_modules/_sh.so...
+found native janet_modules/json.so...
+found native janet_modules/moondown.so...
+compiling build/bag.c to build/build___bag.o...
+linking build/bag...
+</code></pre>
+
+<p>The <code>bag</code> executable is now in the <code>./build</code> directory. You move it
+wherever you like (I move mine to <code>~/bin/</code>).</p>
+
+<h1 id="writingabagattosite">Writing a Bagatto Site</h1>
+
+<p>It might help to read the <a href="../../manual.html">manual</a> at some
+point. This will be more of a whirlwind tour.</p>
+
+<h2 id="creatingtheindexmodule">Creating the Index Module</h2>
+
+<p>You should create a directory that will hold all of your source
+files. Bagatto doesn&#8217;t expect any particular folder structure or
+names, so it can be as simple as you like. Let&#8217;s create one called
+<code>favorite-dogs/</code>, which will be a website featuring some of our
+favorite dogs.</p>
+
+<pre><code class="bash">code-src [] ⊕ mkdir favorite-dogs
+code-src [] ⊕ cd favorite-dogs/
+code-src/favorite-dogs [] ⊕ 
+</code></pre>
+
+<p>Bagatto needs a single Janet file, called an <strong>index module</strong>, to
+evaluate. It can be named whatever you like. Let&#8217;s write one called
+<code>index.janet</code>.</p>
+
+<p>This is what it will contain:</p>
+
+<pre><code class="clj">(bagatto/set-output-dir! &quot;site&quot;)
+
+(def img-path-copier (bagatto/path-copier &quot;static&quot;))
+
+(def data {:dogs {:src (bagatto/* &quot;images/*&quot;)
+                  :attrs bagatto/parse-base}})
+
+(def site {:static {:each :dogs
+                    :dest img-path-copier}
+           :index {:dest &quot;index.html&quot;
+                   :out (bagatto/renderer &quot;templates/index&quot;)}})
+</code></pre>
+
+<p>This index module defines one source, which is a directory called
+<code>images</code>, two outputs, which are a file called <code>site/index.html</code> and a
+<code>site/static</code> directory, and one template, which is called <code>index</code>. We will
+create the directories and template.</p>
+
+<p>Here&#8217;s the directory structure:</p>
+
+<pre><code class="bash">code-src/favorite-dogs [] ⊕ tree
+.
+├── images
+│   ├── baby-bird-sitting-on-a-dogs-head.jpg
+│   └── puppy-on-a-skateboard.png
+├── index.janet
+├── site
+└── templates
+    └── index.temple
+
+3 directories, 4 files
+</code></pre>
+
+<p>We created a directory called <code>site</code> but we didn&#8217;t create an
+<code>index.html</code> or <code>static/</code>, as those will be generated by Bagatto.</p>
+
+<p>Notice that our template file has a <code>.temple</code> extension.</p>
+
+<p>Here are the contents of the index template:</p>
+
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+    &lt;title&gt;Some of my Favorite Dogs&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;These are some of my favorite dogs.&lt;/h1&gt;
+    &lt;ul&gt;
+    {% (each dog (args :dogs)
+         (let [list-entry `&lt;li&gt;&lt;img src=&quot;%s&quot;/&gt;&lt;/li&gt;`]
+           (printf list-entry (img-path-copier args dog)))) %}
+    &lt;/ul&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>Which consists of the HTML I copied from <a href="https://www.sitepoint.com/a-minimal-html-document-html5-edition/">this
+page</a>
+with some Janet code interpolated between <code>{% %}</code>.</p>
+
+<p>In it, briefly, we iterate through the <code>:dogs</code> site data entry, which
+contains an entry for each image in the images directory. We call the
+same <code>img-path-copier</code> function that we defined in the index to get a
+link to the image, and we emit some minimal HTML with that link in it.</p>
+
+<p>This is everything we need to generate a simple web page.</p>
+
+<h1 id="buildingasite">Building a Site</h1>
+
+<h2 id="generatingsitefiles">Generating Site Files</h2>
+
+<p>In order to actually generate the site, simply run <code>bag &lt;the filename of your index module&gt;</code>.</p>
+
+<p>For instance, here&#8217;s the output when we run Bagatto on our new site:</p>
+
+<pre><code class="bash">code-src/favorite-dogs [] ⊕ bag index.janet 
+Reading dogs data spec...
+Beginning 1 jobs...
+Loading dogs...
+[dogs] Loading 2 files
+Finished jobs.
+Reading static site spec...
+Reading index site spec...
+Beginning 2 jobs...
+Generating paths for static...
+Rendering index...
+Finished jobs.
+Starting worker pool with 3 workers...
+[WRITE] site/index.html
+[COPY] site/static/puppy-on-a-skateboard.png
+[COPY] site/static/baby-bird-sitting-on-a-dogs-head.jpg
+Terminated worker pool.
+code-src/favorite-dogs [] ⊕ 
+</code></pre>
+
+<p>It opts for a fairly verbose logging level, narrating its progress. At
+the bottom we see that this invocation resulted in the writing of one
+new HTML file and copying over two static assets.</p>
+
+<p>The resulting file tree is as we&#8217;d expect:</p>
+
+<pre><code class="bash">code-src/favorite-dogs [] ⊕ tree site/
+site/
+├── index.html
+└── static
+    ├── baby-bird-sitting-on-a-dogs-head.jpg
+    └── puppy-on-a-skateboard.png
+
+1 directory, 3 files
+</code></pre>
+
+<p>The resulting site can be hosted as static HTML. To make things
+available on the web, we need to do two things:</p>
+
+<ol>
+<li>Host the files</li>
+<li>Serve them</li>
+</ol>
+
+<p>Both can be done for free/cheap and with minimal maintenance on our part.</p>
+
+<h2 id="hostingsitefiles">Hosting Site Files</h2>
+
+<p>I like to create a git repo in the output directory, which can then be
+used to easily mirror the files into git hosting.</p>
+
+<pre><code class="bash">code-src/favorite-dogs [] ⊕ cd site/
+code-src/favorite-dogs/site [] ⊕ ls
+index.html  static
+code-src/favorite-dogs/site [] ⊕ git init
+Initialized empty Git repository in /home/zax/code-src/favorite-dogs/site/.git/
+code-src/favorite-dogs/site [] ⊕ git add index.html static/
+code-src/favorite-dogs/site [] ⊕ git commit -am'Initial commit'
+[master (root-commit) f10cdd2] Initial commit
+ 3 files changed, 14 insertions(+)
+ create mode 100644 index.html
+ create mode 100644 static/baby-bird-sitting-on-a-dogs-head.jpg
+ create mode 100644 static/puppy-on-a-skateboard.png
+</code></pre>
+
+<p> At this point, we can easily create a GitHub/GitLab remote for this
+repo.</p>
+
+<pre><code class="```bash">code-src/favorite-dogs/site [master] ⊕ hub create bagatto-quickstart
+Updating origin
+https://github.com/subsetpark/bagatto-quickstart
+code-src/favorite-dogs/site [master] ⊕ git push
+Enumerating objects: 6, done.
+Counting objects: 100% (6/6), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (6/6), 2.16 MiB | 949.00 KiB/s, done.
+Total 6 (delta 0), reused 0 (delta 0), pack-reused 0
+To github.com:subsetpark/bagatto-quickstart.git
+ * [new branch]      master -&gt; master
+</code></pre>
+
+<p>You can see for yourself here: <a href="https://github.com/subsetpark/bagatto-quickstart">https://github.com/subsetpark/bagatto-quickstart</a></p>
+
+<h2 id="servingsitefiles">Serving Site Files</h2>
+
+<p>Both GitHub Pages and Netlify have a no-cost option for serving static
+sites.</p>
+
+<p>Using Netlify&#8217;s <em>New site from Git</em> feature, I created a new site and
+hooked it up to the GitHub repo.</p>
+
+<p>Here&#8217;s what I see:</p>
+
+<figure>
+<img src="../static/netlify.png" alt="Netlify Site Settings" />
+<figcaption>Netlify Site Settings</figcaption>
+</figure>
+
+<p>The site is now hosted on Netlify at
+<a href="https://dazzling-hopper-e15ff2.netlify.app/">https://dazzling-hopper-e15ff2.netlify.app/</a>.</p>
+
+<p>Any time I push a new commit to the GitHub repo, Netlify will pick it
+up and redeploy.</p>
+
+<h1 id="morereading">More Reading</h1>
+
+<p>This has been a whirlwind introduction to getting a Bagatto site up
+and running. We&#8217;ve seen a handful of useful functions in the
+<code>bagatto/</code> namespace in the code samples; those and others are
+documented in the <a href="../api.html">API</a>. You can also read the <a href="../manual.html">Manual</a>
+for more in-depth discussion.</p>
+        </div>
+      </div>
+
+
+        </div>
+    
+    </div>
+    
+    <footer class="footer pv5 ph3 pa6-ns mt5 dt-l w-100 lh-copy">
+      <div class="">
+        Z. D. Smith, Brooklyn, 2020
+      </div>
+      <div class="dtc-l tr-l mt2 mt0-l">
+        Built with Bagatto.
+      </div>
+    </footer>
+  </body>
+</html>
+
