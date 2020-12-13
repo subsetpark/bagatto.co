@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang=en> <head><meta charset=utf-8><meta content="IE=edge,chrome=1" http-equiv=X-UA-Compatible><title>Bagatto</title><meta content="width=device-width, initial-scale=1.0" name=viewport><meta content itemprop=author name=author><meta name=description content="Bagatto: a transparent, extensible static site generator"><link href=/images/48.png rel=icon sizes=48x48 type=image/png><link href=/images/128.png rel=icon sizes=128x128 type=image/png><link href=/images/256.png rel=icon sizes=256x256 type=image/png><link rel=preconnect href=https://fonts.gstatic.com><link href="https://fonts.googleapis.com/css2?family=Adamina&family=Raleway:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel=stylesheet async><link href=../static/site.css rel=stylesheet type=text/css async></head> <body> <div> <div> <div class="mw8 center pv7 cf"> <div class=fl> <div class=ph3> <h1 class="f1 ma0 title"> Bagatto </h1> <p class=mv3> A transparent, extensible static site generator </p> </div> <nav role=navigation> <ul class="list pl0 ma0"> <li class="dib mr2"> <a class="pv2 ph3 fw6 nav focus-black" href=../index.html>Bagatto</a> </li> <li class="dib mr2"> <a class="pv2 ph3 fw6 nav focus-black" href=../manual.html>Manual</a> </li> <li class="dib mr2"> <a class="pv2 ph3 fw6 nav focus-black" href=../guides.html>Guides</a> </li> <li class="dib mr2"> <a class="pv2 ph3 fw6 nav focus-black" href=../api.html>API</a> </li> <li class="dib mr2"> <a href=https://sr.ht/~subsetpark/bagatto/ class="pv2 ph3 fw6 nav focus-black">Source</a> </li> </ul> </nav> <div class="ph3 mt5"> <div> <h1 class="dib ma0 pr2">Extending Bagatto with Janet Libraries and `jpm`.</h1> </div> <div class="md guide"> <p>Bagatto is designed to be transparent and extensible. These two features complement each other: by exposing as much of the functionality as we can in the form of ordinary functions and function signatures, we render the act of writing a website obvious and inspectable, and make it pratical for site authors to write their own logic or introduce libraries from the wider Janet ecosystem.</p> <p>In this guide we&#8217;ll see an example of how to use <code>jpm</code> to manage janet dependencies.</p> <p>The library we&#8217;ll introduce is <a href=https://github.com/LouisJackman/janet-hypertext>Janet Hypertext</a>, which allows a programmer to easily generate HTML using Janet s-expressions.</p> <p>Here&#8217;s some template code from the Bagatto <code>basic-site</code> demo project:</p> <pre><code>{% (bagatto/include &quot;templates/head&quot;) %}
+
+&lt;h1&gt;{{ (get-in args [:config :title]) }}&lt;/h1&gt; 
+&lt;div&gt;
+  &lt;nav&gt;
+    &lt;ul class=&quot;list pl0 ma0&quot;&gt;
+      {% (each page (args :pages)
+            (printf ```
+                    &lt;li class=&quot;dib mr2&quot;&gt;
+                    &lt;a class=&quot;pv2 ph3 fw6 nav focus-black&quot;
+                     href=&quot;%s&quot;&gt;%s&lt;/a&gt;
+                    &lt;/li&gt;
+                    ```
+                    (page-path args page)
+                    (page :basename))) %}
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/div&gt;
+    
+{% (bagatto/include &quot;templates/foot&quot;) %}
+</code></pre> <p>Here&#8217;s how we could express the same template using Hypertext<a href=#fn:1 id=fnref:1 title="see footnote" class=footnote><sup>1</sup></a>:</p> <pre><code>{$ (import hypertext) $}
+{% (bagatto/include &quot;templates/head&quot;) %}
+
+&lt;h1&gt;{{ (get-in args [:config :title]) }}&lt;/h1&gt; 
+&lt;div&gt;
+  &lt;nav&gt;
+    &lt;ul class=&quot;list pl0 ma0&quot;&gt;
+
+{% (each page (args :pages)
+     (def path (page-path args page))
+     (print (hypertext/markup
+              (li :class &quot;dib mr2&quot;
+                (a :class &quot;pv2 ph3 fw6 nav focus-black&quot;
+                   :href path
+                   [(page :basename)]))))) %}
+
+     &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/div&gt;
+
+{% (bagatto/include &quot;templates/foot&quot;) %}
+</code></pre> <p>We make a compile-time call to <code>(import hypertext)</code> (like with a normal library), and then we access the library&#8217;s functions in the template.</p> <p><code>hypertext</code> is not included in Bagatto nor in the Janet standard library, so if we try to compile that template without any other changes we get an error:</p> <pre><code class=bash>code-src/bagatto/demo/basic-site [new-demos !] ⊕ bag index.janet
+...
+in thread &lt;core/thread 0x7F74EC0BBF10&gt;: error: 
+Encountered error rendering output for site spec index:
+
+could not find module hypertext:
+    /usr/lib/janet/hypertext.temple
+    /usr/lib/janet/hypertext.jimage
+    /usr/lib/janet/hypertext.janet
+    /usr/lib/janet/hypertext/init.janet
+    /usr/lib/janet/hypertext.so
+    hypertext.temple
+    hypertext.jimage
+    hypertext.janet
+    hypertext/init.janet
+    hypertext.so.
+       
+Current render context:
+@{:current-template &quot;templates/index&quot;}
+</code></pre> <p>By default it tries to import the hypertext library from two places:</p> <ol> <li>the global Janet package directory;</li> <li>the current working directory,</li> </ol> <p>and the library is not available.</p> <p>Luckily for us, Bagatto is designed to be extensible with the rest of the Janet ecosystem.</p> <h2 id=jpmthejanetpackagemanager><code>jpm</code>, the Janet Package Manager</h2> <p><a href=https://janet-lang.org/docs/jpm.html><code>jpm</code></a> allows us to manage dependencies and external libraries. There are two ways to install a library using <code>jpm</code>: globally, or locally.</p> <h3 id=installingapackageglobally>Installing a package globally</h3> <p>By default, <code>jpm install</code> will install a Janet package so that any Janet runtime instance on the system can access it. We can see that in action here:</p> <pre><code class=bash>code-src/bagatto/demo/basic-site [new-demos !] ⊕ sudo jpm install https://gitlab.com/louis.jackman/janet-hypertext.git
+[sudo] password for zax: 
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 3 (delta 2), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), 656 bytes | 164.00 KiB/s, done.
+From https://gitlab.com/louis.jackman/janet-hypertext
+ * branch            master     -&gt; FETCH_HEAD
+   ca43fef..23d5697  master     -&gt; origin/master
+Updating ca43fef..23d5697
+Fast-forward
+ README.md | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+removing /usr/lib/janet/hypertext.janet
+removing manifest /usr/lib/janet/.manifests/hypertext.jdn
+Uninstalled.
+generating /usr/lib/janet/.manifests/hypertext.jdn...
+Installed as 'hypertext'.
+copying src/hypertext.janet to /usr/lib/janet...
+code-src/bagatto/demo/basic-site [new-demos !] ⊕ janet
+Janet 1.12.2-5df8ac5 linux/x64 - '(doc)' for help
+repl:1:&gt; (import hypertext)
+nil
+repl:2:&gt; (hypertext/markup p)
+&quot;&lt;p&gt;&lt;/p&gt;&quot;
+repl:4:&gt; 
+</code></pre> <p>After running <code>jpm</code> install, I can launch a normal <code>janet</code> instance and import that library.</p> <h3 id=installingapackagelocally>Installing a package locally</h3> <p>On the other hand, I generally prefer to keep my package namespaces separate by project. To do this, we simply set the <code>JANET_PATH</code> environment variable. Here&#8217;s the same sequence of events, run locally:</p> <pre><code class=bash>code-src/bagatto/demo/basic-site [new-demos !] ⊕ mkdir vendor
+code-src/bagatto/demo/basic-site [new-demos !] ⊕ JANET_PATH=vendor jpm install https://gitlab.com/louis.jackman/janet-hypertext.git
+cloning repository https://gitlab.com/louis.jackman/janet-hypertext.git to vendor/.cache/https___gitlab.com_louis.jackman_janet-hypertext.git
+Cloning into 'vendor/.cache/https___gitlab.com_louis.jackman_janet-hypertext.git'...
+remote: Enumerating objects: 59, done.
+remote: Counting objects: 100% (59/59), done.
+remote: Compressing objects: 100% (24/24), done.
+remote: Total 59 (delta 27), reused 54 (delta 25), pack-reused 0
+Receiving objects: 100% (59/59), 23.68 KiB | 4.74 MiB/s, done.
+Resolving deltas: 100% (27/27), done.
+generating /home/zax/code-src/bagatto/demo/basic-site/vendor/.manifests/hypertext.jdn...
+Installed as 'hypertext'.
+copying src/hypertext.janet to /home/zax/code-src/bagatto/demo/basic-site/vendor...
+code-src/bagatto/demo/basic-site [new-demos !] ⊕ JANET_PATH=vendor janet
+Janet 1.12.2-5df8ac5 linux/x64 - '(doc)' for help
+repl:1:&gt; (import hypertext)
+nil
+repl:2:&gt; (hypertext/markup p)
+&quot;&lt;p&gt;&lt;/p&gt;&quot;
+repl:3:&gt; 
+</code></pre> <p>By prefacing the calls to <code>jpm</code> and <code>janet</code> with <code>JANET_PATH=vendor</code>, we can specify a dependency context that&#8217;s local to our project.</p> <h2 id=packageswithbagatto>Packages with Bagatto</h2> <p>Bagatto is designed to behave like a normal Janet instance whenever possible. Therefore, we should expect the same behaviour to work with the <code>bag</code> executable.</p> <pre><code class=bash>code-src/bagatto/demo/basic-site [new-demos !] ⊕ JANET_PATH=vendor/ bag index.janet
+Reading config data spec...
+Reading pages data spec...
+Reading css data spec...
+Beginning 3 jobs...
+Loaded config
+Loading pages...
+[pages] Loading 2 files
+Loading css (styles.css)...
+Finished jobs.
+Reading pages site spec...
+Reading index site spec...
+Reading css site spec...
+Beginning 3 jobs...
+Rendering pages...
+Rendering index...
+Generating path for css...
+Finished jobs.
+Starting worker pool with 4 workers...
+[WRITE] site/index.html
+[COPY] site/css/styles.css
+[WRITE] site/pages/bagatto.html
+[WRITE] site/pages/about.html
+Terminated worker pool.
+</code></pre> <p>I shall leave it as an exercise to the reader to verify that the output is the same as in the demo site.</p> <h2 id=conclusion>Conclusion</h2> <p>In short, you should be able to use packages with <code>jpm</code> inside of Bagatto in exactly the same fashion as you do outside of it.</p> <p>Bagatto is designed so that you don&#8217;t <em>have</em> to call <code>janet</code> or <code>jpm</code> when using it; however, you should be able to rely on all of your expectations and assumptions about the operation of Janet when managing your Bagatto source documents as well as leveraging external Janet code to build them.</p> <div class=footnotes> <hr> <ol> <li id=fn:1> <p>I should establish for the record that I'm not particularly experienced with Janet Hypertext and there is probably a more elegant way to write the above. Hopefully it gives you a taste of what the library does; the purpose of this guide is to demonstrate how to use any library you might like. <a href=#fnref:1 title="return to body" class=reversefootnote>&#160;&#8617;</a></p> </li> </ol> </div> </div> </div> </div> </div> <footer class="footer pv5 ph3 pa6-ns mt5 dt-l w-100 lh-copy"> <div class> Z. D. Smith, Brooklyn, 2020 </div> <div class="dtc-l tr-l mt2 mt0-l"> Built with Bagatto. </div> </footer> </body> </html> 
